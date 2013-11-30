@@ -148,5 +148,21 @@ public class StoreableRow implements Storeable {
             row[valueID] = nextValue;
         }
     }
+    
+    @Override
+    public String toString() {
+        String result = "";
+        result += this.getClass().getSimpleName();
+        result += "[";             
+        for (Object item : row) {
+            if (item != null) {
+                result += item;
+            }
+            result += ",";
+        }
+        result = result.substring(0, result.length() - 1);
+        result += "]";
+        return result;
+    }
 
 }

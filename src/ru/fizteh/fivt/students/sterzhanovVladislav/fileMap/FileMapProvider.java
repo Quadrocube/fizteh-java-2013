@@ -19,17 +19,19 @@ import ru.fizteh.fivt.students.sterzhanovVladislav.fileMap.storeable.StoreableRo
 import ru.fizteh.fivt.students.sterzhanovVladislav.fileMap.storeable.StoreableUtils;
 import ru.fizteh.fivt.students.sterzhanovVladislav.shell.ShellUtility;
 
-public class FileMapProvider implements TableProvider {
+public class FileMapProvider implements TableProvider, AutoCloseable {
 
     public static final String SIGNATURE_FILE_NAME = "signature.tsv";
 
     private Path rootDir;
     private HashMap<String, FileMap> tables;
+    private volatile boolean isClosed = false;
     
     private Lock lock = new ReentrantLock();
     
     @Override
     public FileMap getTable(String name) {
+        ensureIsOpen();
         if (name == null || name.isEmpty()) {
             throw new IllegalArgumentException();
         }
@@ -56,6 +58,7 @@ public class FileMapProvider implements TableProvider {
 
     @Override
     public FileMap createTable(String name, List<Class<?>> columnTypes) throws IOException {
+        ensureIsOpen();
         if (name == null || name.isEmpty() || columnTypes == null || columnTypes.isEmpty()) {
             throw new IllegalArgumentException();
         }
@@ -80,6 +83,7 @@ public class FileMapProvider implements TableProvider {
 
     @Override
     public void removeTable(String name) {
+        ensureIsOpen();
         if (name == null || name.isEmpty()) {
             throw new IllegalArgumentException();
         }
@@ -102,6 +106,7 @@ public class FileMapProvider implements TableProvider {
     }
     
     public String getRootDir() {
+        ensureIsOpen();
         return rootDir.toString();
     }
 
@@ -143,12 +148,14 @@ public class FileMapProvider implements TableProvider {
     @Override
     public Storeable deserialize(Table table, String value)
             throws ParseException {
+        ensureIsOpen();
         return StoreableUtils.deserialize(value, generateSignature(table));
     }
 
     @Override
     public String serialize(Table table, Storeable value)
             throws ColumnFormatException {
+        ensureIsOpen();
         if (!StoreableUtils.validate(value, generateSignature(table))) {
             throw new ColumnFormatException("wrong type (can't serialize value according to signature)");
         }
@@ -157,13 +164,48 @@ public class FileMapProvider implements TableProvider {
 
     @Override
     public Storeable createFor(Table table) {
+        ensureIsOpen();
         return new StoreableRow(generateSignature(table));
     }
 
     @Override
     public Storeable createFor(Table table, List<?> values)
             throws ColumnFormatException, IndexOutOfBoundsException {
+        ensureIsOpen();
         return new StoreableRow(generateSignature(table), values);
+    }
+    
+    @Override
+    public String toString() {
+        ensureIsOpen();
+        String result = "";
+        result += this.getClass().getSimpleName();
+        result += "[" + rootDir + "]";
+        return result;
+    }
+    
+    @Override
+    public void close() throws Exception {
+        isClosed = true;
+        for (FileMap table : tables.values()) {
+            table.close();
+        }
+    }
+    
+    public void reset(String tableName) {
+        ensureIsOpen();
+        lock.lock();
+        try {
+            tables.remove(tableName);
+        } finally {
+            lock.unlock();
+        }
+    }
+    
+    private void ensureIsOpen() {
+        if (isClosed) {
+            throw new IllegalStateException("TableProvider was closed");
+        }
     }
     
     private static List<Class<?>> generateSignature(Table table) {

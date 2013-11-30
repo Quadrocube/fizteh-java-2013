@@ -1,5 +1,6 @@
 package ru.fizteh.fivt.students.sterzhanovVladislav.fileMap;
 
+import java.io.File;
 import java.io.IOException;
 
 import java.nio.file.Path;
@@ -16,13 +17,14 @@ import ru.fizteh.fivt.storage.structured.Storeable;
 import ru.fizteh.fivt.storage.structured.Table;
 import ru.fizteh.fivt.students.sterzhanovVladislav.fileMap.storeable.StoreableUtils;
 
-public class FileMap implements Table {
+public class FileMap implements Table, AutoCloseable {
     
     private String name = null;
     private MultiHashMap db = null;
     private List<Class<?>> columnTypes = null;
     private FileMapProvider parentProvider = null;
     private volatile boolean destroyed = false;
+    private volatile boolean isClosed = false;
 
     private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
     private final Lock rLock = rwLock.readLock(); 
@@ -136,6 +138,19 @@ public class FileMap implements Table {
         return columnTypes.get(columnIndex);
     }
     
+    @Override
+    public String toString() {
+        ensureTableExists();
+        String result = "";
+        result += this.getClass().getSimpleName();
+        result += "[";
+        if (parentProvider != null) {
+            result += parentProvider.getRootDir() + File.separator;
+        }
+        result += name + "]";
+        return result;
+    }
+    
     public void setName(String name) {
         ensureTableExists();
         this.name = name;
@@ -247,6 +262,9 @@ public class FileMap implements Table {
         if (destroyed) {
             throw new IllegalStateException("Table no longer exists");
         }
+        if (isClosed) {
+            throw new IllegalStateException("Table was closed");
+        }
     }
     
     private int estimateDiffDelta() {
@@ -298,4 +316,18 @@ public class FileMap implements Table {
     private boolean isValidValue(Storeable s) {
         return !(s == null || !StoreableUtils.validate(s, columnTypes));
     }
+
+    @Override
+    public void close() throws Exception {
+        isClosed = true;
+        rollback();
+        if (parentProvider != null) {
+            try {
+                parentProvider.reset(name);
+            } catch (IllegalStateException e) {
+                // Provider is already closed -> just leave it alone.
+            }
+        }
+    }
+    
 }

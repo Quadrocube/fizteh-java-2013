@@ -51,6 +51,7 @@ public class MultiHashMap {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public MultiHashMap() {
         dbArray = (HashMap<String, Storeable>[][]) new HashMap[16][16];
         for (int i = 0; i < 16; ++i) {
