@@ -160,7 +160,9 @@ public class StoreableRow implements Storeable {
             }
             result += ",";
         }
-        result = result.substring(0, result.length() - 1);
+        if (result.length() > 1) {
+            result = result.substring(0, result.length() - 1);
+        }
         result += "]";
         return result;
     }
