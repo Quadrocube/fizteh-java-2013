@@ -5,7 +5,7 @@ import ru.fizteh.fivt.students.sterzhanovVladislav.shell.Command;
 public abstract class FileMapCommand extends Command {
     DatabaseContext dbContext;
     
-    FileMapCommand setContext(DatabaseContext context) {
+    public FileMapCommand setContext(DatabaseContext context) {
         dbContext = context;
         return this;
     }

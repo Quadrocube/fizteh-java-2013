@@ -1,5 +1,7 @@
 package ru.fizteh.fivt.students.sterzhanovVladislav.shell;
 
+import java.io.InputStream;
+import java.io.PrintStream;
 import java.util.HashMap;
 
 public class Wrapper {
@@ -17,7 +19,15 @@ public class Wrapper {
     }
     
     public static void main(String[] args) {
-        ShellUtility.execShell(args, cmdMap);
+        boolean isInteractiveMode = true;
+        InputStream cmdStream = System.in;
+        PrintStream errorStream = System.err;
+        if (args.length > 0) {
+            cmdStream = ShellUtility.createStream(args);
+            errorStream = System.out;
+            isInteractiveMode = false;
+        }
+        ShellUtility.execShell(cmdMap, cmdStream, System.out, errorStream, isInteractiveMode, isInteractiveMode);
         System.exit(0);
     }
 }

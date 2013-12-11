@@ -154,6 +154,7 @@ public class ParallelTester {
             // Throws an exception if an exception was thrown by the task.
             assertEquals(future.get(), (Integer) 5);
         }
+        /*TODO: re-write db initialization to 256 maps and check file afterwards*/
         shutDownExecutor(executorService);
     }
 

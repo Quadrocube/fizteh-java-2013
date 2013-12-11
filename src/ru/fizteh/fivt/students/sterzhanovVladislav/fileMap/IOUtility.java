@@ -174,19 +174,26 @@ public class IOUtility {
         try {
             byte[] buf = Files.readAllBytes(signaturePath);
             String typeNamesList = StandardCharsets.UTF_8.decode(ByteBuffer.wrap(buf)).toString();
-            typeNamesList = typeNamesList.replaceAll("\n", " ").trim();
-            for (String typeName : typeNamesList.split(" +")) {
-                typeName = typeName.replaceAll("\n", " ");
-                if (!StoreableUtils.TYPENAMES.containsKey(typeName)) {
-                    if (typeName.isEmpty()) {
-                        typeName = "[empty]";
-                    }
-                    throw new ColumnFormatException("wrong type (" + typeName + " unknown)");
-                }
-                signature.add(StoreableUtils.TYPENAMES.get(typeName));
-            }
+            signature = parseSignatureFromString(typeNamesList);
+            
         } catch (IOException e) {
             throw new IllegalStateException("Error: malformed database");
+        }
+        return signature;
+    }
+    
+    public static List<Class<?>> parseSignatureFromString(String typeNamesList) {
+        List<Class<?>> signature = new ArrayList<Class<?>>();
+        typeNamesList = typeNamesList.replaceAll("\n", " ").trim();
+        for (String typeName : typeNamesList.split(" +")) {
+            typeName = typeName.replaceAll("\n", " ");
+            if (!StoreableUtils.TYPENAMES.containsKey(typeName)) {
+                if (typeName.isEmpty()) {
+                    typeName = "[empty]";
+                }
+                throw new ColumnFormatException("wrong type (" + typeName + " unknown)");
+            }
+            signature.add(StoreableUtils.TYPENAMES.get(typeName));
         }
         return signature;
     }

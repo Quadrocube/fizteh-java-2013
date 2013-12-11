@@ -136,6 +136,16 @@ public class FileMap implements Table {
         return columnTypes.get(columnIndex);
     }
     
+    public String describe() {
+        String signature = "[";
+        for (Class<?> type : columnTypes) {
+            signature += StoreableUtils.CLASSES.get(type) + " ";
+        }
+        signature = signature.substring(0, signature.length() - 1);
+        signature += "]";
+        return signature;
+    }
+    
     public void setName(String name) {
         ensureTableExists();
         this.name = name;

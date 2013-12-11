@@ -4,11 +4,11 @@ import java.io.IOException;
 
 import org.junit.*;
 import ru.fizteh.fivt.storage.structured.TableProvider;
-import ru.fizteh.fivt.storage.structured.TableProviderFactory;
+import ru.fizteh.fivt.students.sterzhanovVladislav.fileMap.AtomicTableProviderFactory;
 import ru.fizteh.fivt.students.sterzhanovVladislav.fileMap.FileMapProviderFactory;
 
 public class FileMapProviderFactoryTester {
-    public TableProviderFactory factory;
+    public AtomicTableProviderFactory factory;
     
     @Before
     public void init() {

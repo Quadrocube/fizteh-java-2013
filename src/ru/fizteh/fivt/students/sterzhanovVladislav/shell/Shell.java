@@ -16,13 +16,13 @@ public class Shell {
     
     private HashMap<String, Command> cmdMap;
     
-    public void execCommandStream(InputStream cmdStream, boolean isInteractiveMode) throws Exception {
-        if (isInteractiveMode) {
-            err = System.out;
-        }
+    public void execCommandStream(InputStream cmdStream, PrintStream output, PrintStream error,
+            boolean isInteractiveMode, boolean doPrintPrompt) throws Exception {
+        out = output;
+        err = error;
         Scanner cmdReader = new Scanner(cmdStream);
         try {
-            maybePrintPrompt(isInteractiveMode);
+            maybePrintPrompt(doPrintPrompt);
             while (cmdReader.hasNextLine()) {
                 try {
                     String[] cmdList = cmdReader.nextLine().split(";");
@@ -39,7 +39,7 @@ public class Shell {
                         throw e;
                     }
                 }
-                maybePrintPrompt(isInteractiveMode);
+                maybePrintPrompt(doPrintPrompt);
             }
         } finally {
             cmdReader.close();

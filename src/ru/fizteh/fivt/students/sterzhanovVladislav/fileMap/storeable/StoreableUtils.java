@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,7 @@ import org.xml.sax.SAXException;
 
 import ru.fizteh.fivt.storage.structured.ColumnFormatException;
 import ru.fizteh.fivt.storage.structured.Storeable;
+import ru.fizteh.fivt.storage.structured.Table;
 
 public class StoreableUtils {
 
@@ -163,5 +165,13 @@ public class StoreableUtils {
     public static Class<?> resolveClass(String className) {
         return TYPENAMES.get(className);
     }
-
+    
+    public static List<Class<?>> generateSignature(Table table) {
+        List<Class<?>> classList = new ArrayList<Class<?>>();
+        for (int classID = 0; classID < table.getColumnsCount(); ++classID) {
+            classList.add(table.getColumnType(classID));
+        }
+        return classList;
+    }
+    
 }

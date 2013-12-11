@@ -7,9 +7,11 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import ru.fizteh.fivt.storage.structured.RemoteTableProvider;
+import ru.fizteh.fivt.students.sterzhanovVladislav.fileMap.network.RemoteFileMapProvider;
 import ru.fizteh.fivt.students.sterzhanovVladislav.fileMap.storeable.StoreableUtils;
 import ru.fizteh.fivt.students.sterzhanovVladislav.shell.CommandParser;
-import ru.fizteh.fivt.students.sterzhanovVladislav.shell.DefaultCommandParser;
+import ru.fizteh.fivt.students.sterzhanovVladislav.shell.CommandParsers;
 
 public class FileMapCommands {
     public static class Put extends FileMapCommand {
@@ -25,10 +27,10 @@ public class FileMapCommands {
         
         @Override
         public CommandParser getParser() {
-            return new FileMapPutCommandParser();
+            return new CommandParsers.FileMapPutCommandParser();
         }
         
-        Put() {
+        public Put() {
             super(3);
         }
     }
@@ -46,10 +48,10 @@ public class FileMapCommands {
         
         @Override
         public CommandParser getParser() {
-            return new DefaultCommandParser();
+            return new CommandParsers.DefaultCommandParser();
         }
 
-        Get() {
+        public Get() {
             super(2);
         }
     }
@@ -67,10 +69,10 @@ public class FileMapCommands {
         
         @Override
         public CommandParser getParser() {
-            return new DefaultCommandParser();
+            return new CommandParsers.DefaultCommandParser();
         }
         
-        Remove() {
+        public Remove() {
             super(2);
         }
     }
@@ -84,10 +86,10 @@ public class FileMapCommands {
         
         @Override
         public CommandParser getParser() {
-            return new DefaultCommandParser();
+            return new CommandParsers.DefaultCommandParser();
         }
         
-        Use() {
+        public Use() {
             super(2);
         }
     }
@@ -129,27 +131,27 @@ public class FileMapCommands {
         
         @Override
         public CommandParser getParser() {
-            return new DefaultCommandParser();
+            return new CommandParsers.DefaultCommandParser();
         }
         
-        Create() {
+        public Create() {
             super(-1);
         }
     }
     
     public static class Drop extends FileMapCommand {
         @Override
-        public void innerExecute(String[] args) throws IllegalStateException {
+        public void innerExecute(String[] args) throws IllegalStateException, IOException {
             dbContext.removeTable(args[1]);
             parentShell.out.println("dropped");
         }
         
         @Override
         public CommandParser getParser() {
-            return new DefaultCommandParser();
+            return new CommandParsers.DefaultCommandParser();
         }
         
-        Drop() {
+        public Drop() {
             super(2);
         }
     }
@@ -157,28 +159,28 @@ public class FileMapCommands {
     public static class Exit extends FileMapCommand {
         @Override
         public void innerExecute(String[] args) throws Exception {
-            dbContext.closeActiveTable();
-            parentShell.exit(0);
+            dbContext.close();
+            dbContext.exit();
         }
         
         @Override
         public CommandParser getParser() {
-            return new DefaultCommandParser();
+            return new CommandParsers.DefaultCommandParser();
         }
         
-        Exit() {
+        public Exit() {
             super(1);
         }
     }
     
     public static class Commit extends FileMapCommand {
-        Commit() {
+        public Commit() {
             super(1);
         }
 
         @Override
         public CommandParser getParser() {
-            return new DefaultCommandParser();
+            return new CommandParsers.DefaultCommandParser();
         }
 
         @Override
@@ -189,13 +191,13 @@ public class FileMapCommands {
     }
     
     public static class Rollback extends FileMapCommand { 
-        Rollback() {
+        public Rollback() {
             super(1);
         }
 
         @Override
         public CommandParser getParser() {
-            return new DefaultCommandParser();
+            return new CommandParsers.DefaultCommandParser();
         }
 
         @Override
@@ -206,18 +208,97 @@ public class FileMapCommands {
     }
     
     public static class Size extends FileMapCommand {
-        Size() {
+        public Size() {
             super(1);
         }
 
         @Override
         public CommandParser getParser() {
-            return new DefaultCommandParser();
+            return new CommandParsers.DefaultCommandParser();
         }
 
         @Override
         public void innerExecute(String[] args) throws Exception, IOException {
             parentShell.out.println(dbContext.getActiveSize());
+        }
+    }
+    
+    public static class Connect extends FileMapCommand {
+        public Connect() {
+            super(-1);
+        }
+
+        @Override
+        public CommandParser getParser() {
+            return new CommandParsers.DefaultCommandParser();
+        }
+
+        @Override
+        public void innerExecute(String[] args) throws Exception, IOException {
+            if (args.length < 2 || args.length > 3) {
+                throw new IllegalArgumentException("connect host [port]");
+            }
+            String hostname = args[1];
+            int port = 10001;
+            if (args.length == 3) {
+                port = Integer.parseInt(args[2]);
+            }
+            dbContext.attachRemoteProvider(new RemoteFileMapProvider(hostname, port));
+            parentShell.out.println("connected");
+        }
+    }    
+
+    public static class Disconnect extends FileMapCommand {
+        public Disconnect() {
+            super(1);
+        }
+
+        @Override
+        public CommandParser getParser() {
+            return new CommandParsers.DefaultCommandParser();
+        }
+
+        @Override
+        public void innerExecute(String[] args) throws Exception, IOException {
+            dbContext.disconnectRemoteProvider();
+            parentShell.out.println("disconnected");
+        }
+    }    
+
+    public static class Whereami extends FileMapCommand {
+        public Whereami() {
+            super(1);
+        }
+
+        @Override
+        public CommandParser getParser() {
+            return new CommandParsers.DefaultCommandParser();
+        }
+
+        @Override
+        public void innerExecute(String[] args) throws Exception, IOException {
+            RemoteTableProvider remote = dbContext.getRemoteProvider();
+            if (remote != null) {
+                parentShell.out.println("remote " + remote);
+            } else {
+                parentShell.out.println("local");
+            }
+        }
+    }
+    
+    public static class Describe extends FileMapCommand {
+        public Describe() {
+            super(1);
+        }
+
+        @Override
+        public CommandParser getParser() {
+            return new CommandParsers.DefaultCommandParser();
+        }
+
+        @Override
+        public void innerExecute(String[] args) throws Exception, IOException {
+            parentShell.out.println(dbContext.describe());
         }
     }
 }

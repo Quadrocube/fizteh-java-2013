@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
@@ -14,12 +13,11 @@ import java.util.concurrent.locks.ReentrantLock;
 import ru.fizteh.fivt.storage.structured.ColumnFormatException;
 import ru.fizteh.fivt.storage.structured.Storeable;
 import ru.fizteh.fivt.storage.structured.Table;
-import ru.fizteh.fivt.storage.structured.TableProvider;
 import ru.fizteh.fivt.students.sterzhanovVladislav.fileMap.storeable.StoreableRow;
 import ru.fizteh.fivt.students.sterzhanovVladislav.fileMap.storeable.StoreableUtils;
 import ru.fizteh.fivt.students.sterzhanovVladislav.shell.ShellUtility;
 
-public class FileMapProvider implements TableProvider {
+public class FileMapProvider implements AtomicTableProvider {
 
     public static final String SIGNATURE_FILE_NAME = "signature.tsv";
 
@@ -143,34 +141,39 @@ public class FileMapProvider implements TableProvider {
     @Override
     public Storeable deserialize(Table table, String value)
             throws ParseException {
-        return StoreableUtils.deserialize(value, generateSignature(table));
+        return StoreableUtils.deserialize(value, StoreableUtils.generateSignature(table));
     }
 
     @Override
     public String serialize(Table table, Storeable value)
             throws ColumnFormatException {
-        if (!StoreableUtils.validate(value, generateSignature(table))) {
+        if (!StoreableUtils.validate(value, StoreableUtils.generateSignature(table))) {
             throw new ColumnFormatException("wrong type (can't serialize value according to signature)");
         }
-        return StoreableUtils.serialize(value, generateSignature(table));
+        return StoreableUtils.serialize(value, StoreableUtils.generateSignature(table));
     }
 
     @Override
     public Storeable createFor(Table table) {
-        return new StoreableRow(generateSignature(table));
+        return new StoreableRow(StoreableUtils.generateSignature(table));
     }
 
     @Override
     public Storeable createFor(Table table, List<?> values)
             throws ColumnFormatException, IndexOutOfBoundsException {
-        return new StoreableRow(generateSignature(table), values);
+        return new StoreableRow(StoreableUtils.generateSignature(table), values);
     }
-    
-    private static List<Class<?>> generateSignature(Table table) {
-        List<Class<?>> classList = new ArrayList<Class<?>>();
-        for (int classID = 0; classID < table.getColumnsCount(); ++classID) {
-            classList.add(table.getColumnType(classID));
+
+    @Override
+    public void closeTableIfNotModified(String name) throws IllegalStateException, IOException {
+        FileMap table = tables.get(name);
+        if (table == null) {
+            throw new IllegalStateException(name + " not exists");
         }
-        return classList;
+        int currentDiffSize = table.getDiffSize();
+        if (table != null && currentDiffSize > 0) {
+            throw new IllegalStateException(currentDiffSize + " unsaved changes");
+        }
     }
+   
 }
