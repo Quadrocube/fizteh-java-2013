@@ -40,6 +40,11 @@ class Server implements Runnable {
             Thread serveThread = new Thread(new ClientConnection(client));
             serveThread.start();
         }
+        try {
+            socket.close();
+        } catch (IOException e) {
+            // Ignore
+        }
     }
     
     List<String> listUsers() {
@@ -74,7 +79,7 @@ class Server implements Runnable {
         public void run() {
             String user = "";
             synchronized (activeUsers) {
-                user = "" + client.getInetAddress() + client.getPort();
+                user = "" + client.getInetAddress() + " " + client.getPort();
                 activeUsers.add(user);
             }
             InputStream inStream = null;
