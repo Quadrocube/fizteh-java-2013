@@ -1,5 +1,6 @@
 package ru.fizteh.fivt.students.sterzhanovVladislav.fileMap;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.HashMap;
@@ -16,8 +17,19 @@ public class Wrapper {
             System.out.println("fizteh.db.dir not set");
             System.exit(-1);
         }
-        try (DatabaseContext dbContext = new DatabaseContext(new FileMapProvider(dbDir));
-                TelnetServerContext serverContext = new TelnetServerContext(dbDir)) {
+        try (final DatabaseContext dbContext = new DatabaseContext(new FileMapProvider(dbDir));
+                final TelnetServerContext serverContext = new TelnetServerContext(dbDir)) {
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                @Override
+                public void run() {
+                    try {
+                        dbContext.close();
+                        serverContext.close();
+                    } catch (IOException | InterruptedException e) {
+                        // Ignore
+                    }
+                }
+            });
             HashMap<String, Command> cmdMap = ShellUtility.initCmdMap(dbContext, serverContext);
             boolean isInteractiveMode = true;
             InputStream cmdStream = System.in;

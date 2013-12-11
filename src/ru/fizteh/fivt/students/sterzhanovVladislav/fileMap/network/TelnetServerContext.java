@@ -51,7 +51,9 @@ public class TelnetServerContext implements AutoCloseable {
     }
     
     public void close() throws IllegalStateException, InterruptedException {
-        stop();
+        if (isRunning()) {
+            stop();
+        }
     }
     
     public TelnetServerContext(String dbDir) throws IllegalStateException, IllegalArgumentException, IOException {
