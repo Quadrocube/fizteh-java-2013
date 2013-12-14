@@ -91,7 +91,10 @@ public class DatabaseContext implements AutoCloseable {
     }
     
     public void removeTable(String dbName) throws IllegalStateException, IOException {
-        String currentTableName = activeMap.getName();
+        String currentTableName = null;
+        if (activeMap != null) {
+            currentTableName = activeMap.getName();
+        }
         activeProvider.removeTable(dbName);
         if (activeMap != null && dbName.equals(currentTableName)) {
             activeMap = null;

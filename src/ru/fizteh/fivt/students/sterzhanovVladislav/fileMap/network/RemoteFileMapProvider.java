@@ -17,9 +17,9 @@ import ru.fizteh.fivt.students.sterzhanovVladislav.fileMap.storeable.StoreableUt
 
 public class RemoteFileMapProvider implements RemoteTableProvider, AtomicTableProvider {
     
-    private int port;
-    private String host;
-    private Socket providerSession;
+    private final int port;
+    private final String host;
+    private final Socket providerSession;
     
     private Hashtable<String, RemoteFileMap> tableSessions = new Hashtable<String, RemoteFileMap>();
 
@@ -117,11 +117,17 @@ public class RemoteFileMapProvider implements RemoteTableProvider, AtomicTablePr
         }
         RemoteFileMap removedMap = tableSessions.remove(name);
         if (removedMap != null) {
-            tableSessions.remove(name);
-            removedMap.session.close();
+            try {
+                removedMap.session.close();
+            } catch (IOException e) {
+                // Ignore
+            }
         }
         String response = NetworkUtils.queryResponse(providerSession, "drop " + name);
-        if (!response.isEmpty()) {
+        if (response == null) {
+            throw new IOException("null response from server");
+        }
+        if (!response.equals("dropped")) {
             throw new IOException(response);
         }
     }
