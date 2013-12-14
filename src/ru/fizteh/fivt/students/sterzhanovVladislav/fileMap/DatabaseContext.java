@@ -118,10 +118,9 @@ public class DatabaseContext implements AutoCloseable {
                 activeProvider.closeTableIfNotModified(activeMap.getName());
             } catch (IOException e) {
                 // Ignore
-            } finally {
-                activeMap = null;
             }
         }
+        activeMap = null;
         this.remoteProvider = provider;
         this.activeProvider = (AtomicTableProvider) provider;
     }
@@ -135,10 +134,9 @@ public class DatabaseContext implements AutoCloseable {
                 activeProvider.closeTableIfNotModified(activeMap.getName());
             } catch (IOException e) {
                 // Ignore
-            } finally {
-                activeMap = null;
             }
         }
+        activeMap = null;
         try {
             this.remoteProvider.close();
         } catch (Exception e) {

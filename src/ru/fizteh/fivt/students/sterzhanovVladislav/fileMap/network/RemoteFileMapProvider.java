@@ -25,6 +25,9 @@ public class RemoteFileMapProvider implements RemoteTableProvider, AtomicTablePr
 
     @Override
     public Table getTable(String name) {
+        if (name == null || name.isEmpty()) {
+            throw new IllegalArgumentException();
+        }
         Table table = tableSessions.get(name);
         if (table != null) {
             return table;
@@ -67,6 +70,9 @@ public class RemoteFileMapProvider implements RemoteTableProvider, AtomicTablePr
     @Override
     public Table createTable(String name, List<Class<?>> columnTypes)
             throws IOException {
+        if (name == null || name.isEmpty() || columnTypes == null || columnTypes.isEmpty()) {
+            throw new IllegalArgumentException();
+        }
         StringBuilder signature = new StringBuilder();
         for (Class<?> type : columnTypes) {
             String typeName = StoreableUtils.CLASSES.get(type);
@@ -76,7 +82,8 @@ public class RemoteFileMapProvider implements RemoteTableProvider, AtomicTablePr
             signature.append(typeName);
             signature.append(" ");
         }
-        String response = NetworkUtils.queryResponse(providerSession, "create " + name + " (" + signature + ")");
+        String response = NetworkUtils.queryResponse(providerSession, "create " + name 
+                + " (" + signature.substring(0, signature.length() - 1) + ")");
         if (!response.equals("created")) {
             return null;
         }
@@ -101,6 +108,9 @@ public class RemoteFileMapProvider implements RemoteTableProvider, AtomicTablePr
 
     @Override
     public void removeTable(String name) throws IOException {
+        if (name == null || name.isEmpty()) {
+            throw new IllegalArgumentException();
+        }
         RemoteFileMap removedMap = tableSessions.remove(name);
         if (removedMap != null) {
             tableSessions.remove(name);
