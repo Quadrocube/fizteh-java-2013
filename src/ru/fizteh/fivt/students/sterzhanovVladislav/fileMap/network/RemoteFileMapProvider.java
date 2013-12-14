@@ -67,16 +67,17 @@ public class RemoteFileMapProvider implements RemoteTableProvider, AtomicTablePr
     @Override
     public Table createTable(String name, List<Class<?>> columnTypes)
             throws IOException {
-        String signature = "";
+        StringBuilder signature = new StringBuilder();
         for (Class<?> type : columnTypes) {
             String typeName = StoreableUtils.CLASSES.get(type);
             if (typeName == null) {
                 throw new ColumnFormatException("Unable to handle class: " + typeName);
             }
-            signature += typeName;
+            signature.append(typeName);
+            signature.append(" ");
         }
         String response = NetworkUtils.queryResponse(providerSession, "create " + name + " (" + signature + ")");
-        if (response.equals(name + " exists")) {
+        if (!response.equals("created")) {
             return null;
         }
         Socket tableSession;
