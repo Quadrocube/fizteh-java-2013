@@ -12,7 +12,6 @@ public class TelnetServerContext implements AutoCloseable {
     Server server = null;
     final FileMapProvider provider;
     final TelnetServerContext serverContext;
-    final String dbDir;
     
     public void start(int portNumber) throws IllegalStateException, IOException {
         if (isRunning()) {
@@ -56,9 +55,8 @@ public class TelnetServerContext implements AutoCloseable {
         }
     }
     
-    public TelnetServerContext(String dbDir) throws IllegalStateException, IllegalArgumentException, IOException {
-        this.dbDir = dbDir;
-        this.provider = new FileMapProvider(dbDir);
+    public TelnetServerContext(FileMapProvider provider) {
+        this.provider = provider;
         this.serverContext = this;
     }
 }

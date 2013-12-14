@@ -17,8 +17,15 @@ public class Wrapper {
             System.out.println("fizteh.db.dir not set");
             System.exit(-1);
         }
-        try (final DatabaseContext dbContext = new DatabaseContext(new FileMapProvider(dbDir));
-                final TelnetServerContext serverContext = new TelnetServerContext(dbDir)) {
+        FileMapProvider provider = null;
+        try {
+            provider = new FileMapProvider(dbDir);
+        } catch (IllegalArgumentException | IOException e) {
+            System.out.println(e.getMessage());
+            System.exit(-1);
+        }
+        try (final DatabaseContext dbContext = new DatabaseContext(provider);
+                final TelnetServerContext serverContext = new TelnetServerContext(provider)) {
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 @Override
                 public void run() {
