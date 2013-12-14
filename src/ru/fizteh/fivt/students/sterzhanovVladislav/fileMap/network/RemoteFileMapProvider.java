@@ -85,7 +85,11 @@ public class RemoteFileMapProvider implements RemoteTableProvider, AtomicTablePr
         String response = NetworkUtils.queryResponse(providerSession, "create " + name 
                 + " (" + signature.substring(0, signature.length() - 1) + ")");
         if (!response.equals("created")) {
-            return null;
+            if (response.equals(name + " exists")) {
+                return null;
+            } else {
+                throw new RuntimeException(response);
+            }
         }
         Socket tableSession;
         try {
@@ -102,7 +106,7 @@ public class RemoteFileMapProvider implements RemoteTableProvider, AtomicTablePr
             tableSessions.put(name, result);
             return result;
         } catch (IOException e) {
-            return null;
+            throw new RuntimeException(e.getMessage());
         }
     }
 
@@ -139,12 +143,18 @@ public class RemoteFileMapProvider implements RemoteTableProvider, AtomicTablePr
 
     @Override
     public Storeable createFor(Table table) {
+        if (table == null) {
+            throw new IllegalArgumentException("null table");
+        }
         return new StoreableRow(StoreableUtils.generateSignature(table));
     }
 
     @Override
     public Storeable createFor(Table table, List<?> values)
             throws ColumnFormatException, IndexOutOfBoundsException {
+        if (table == null) {
+            throw new IllegalArgumentException("null table");
+        }
         return new StoreableRow(StoreableUtils.generateSignature(table), values);
     }
 
