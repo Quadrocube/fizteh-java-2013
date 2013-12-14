@@ -29,7 +29,7 @@ public class TelnetServerContext implements AutoCloseable {
             throw new IllegalStateException("not started");
         }
         int oldPort = server.getPort();
-        server.terminate();
+        serverThread.interrupt();
         try {
             serverThread.join();
         } finally {

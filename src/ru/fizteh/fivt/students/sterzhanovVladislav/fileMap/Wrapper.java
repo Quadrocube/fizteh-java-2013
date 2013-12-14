@@ -24,8 +24,12 @@ public class Wrapper {
                 public void run() {
                     try {
                         dbContext.close();
+                    } catch (IOException e) {
+                        // Ignore
+                    }
+                    try {
                         serverContext.close();
-                    } catch (IOException | InterruptedException e) {
+                    } catch (IllegalStateException | InterruptedException e) {
                         // Ignore
                     }
                 }

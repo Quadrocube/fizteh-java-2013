@@ -23,13 +23,12 @@ class Server implements Runnable {
     final ServerSocket socket;
     final FileMapProvider provider;
     final TelnetServerContext serverContext;
-    boolean terminate = false;
     private Set<String> activeUsers = new HashSet<String>();
 
     @Override
     public void run() {
         Socket client = null;
-        while (!terminate) {
+        while (!Thread.interrupted()) {
             try {
                 client = socket.accept();
             } catch (SocketTimeoutException e) {
@@ -59,10 +58,6 @@ class Server implements Runnable {
     
     int getPort() {
         return socket.getLocalPort();
-    }
-    
-    void terminate() {
-        terminate = true;
     }
     
     Server(ServerSocket socket, FileMapProvider provider, TelnetServerContext serverContext) throws SocketException {

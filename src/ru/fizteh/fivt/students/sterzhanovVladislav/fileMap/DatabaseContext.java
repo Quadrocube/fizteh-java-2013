@@ -109,17 +109,31 @@ public class DatabaseContext implements AutoCloseable {
         return this.remoteProvider;
     }
     
-    public void attachRemoteProvider(RemoteTableProvider provider) {
+    public void attachRemoteProvider(RemoteTableProvider provider) throws IllegalStateException {
         if (this.remoteProvider != null) {
             throw new IllegalStateException("not connected: you already have an active connection");
+        }
+        if (this.activeMap != null) {
+            try {
+                activeProvider.closeTableIfNotModified(activeMap.getName());
+            } catch (IOException e) {
+                // Ignore
+            }
         }
         this.remoteProvider = provider;
         this.activeProvider = (AtomicTableProvider) provider;
     }
     
-    public void disconnectRemoteProvider() {
+    public void disconnectRemoteProvider() throws IllegalStateException {
         if (this.remoteProvider == null) {
             throw new IllegalStateException("not connected");
+        }
+        if (this.activeMap != null) {
+            try {
+                activeProvider.closeTableIfNotModified(activeMap.getName());
+            } catch (IOException e) {
+                // Ignore
+            }
         }
         try {
             this.remoteProvider.close();
@@ -145,11 +159,12 @@ public class DatabaseContext implements AutoCloseable {
         if (activeMap == null) {
             throw new IllegalStateException("no database");
         }
-        String result = "";
+        StringBuilder signature = new StringBuilder();
         for (Class<?> type : StoreableUtils.generateSignature(activeMap)) {
-            result += StoreableUtils.CLASSES.get(type) + " ";
+            signature.append(StoreableUtils.CLASSES.get(type));
+            signature.append(" ");
         }
-        return result.substring(0, result.length() - 1);
+        return signature.substring(0, signature.length() - 1);
     }
     
     public void exit() {
