@@ -54,7 +54,7 @@ public class RemoteFileMapProvider implements RemoteTableProvider, AtomicTablePr
             throw new RuntimeException("Error while trying to query server: " + e.getMessage());
         }
         if (typeNames.equals(name + " not exists")) {
-            return null;
+            throw new RuntimeException("describe failed unexpectedly");
         }
         List<Class<?>> signature = IOUtility.parseSignatureFromString(typeNames);
 
@@ -63,7 +63,7 @@ public class RemoteFileMapProvider implements RemoteTableProvider, AtomicTablePr
             tableSessions.put(name, result);
             return result;
         } catch (IOException e) {
-            return null;
+            throw new RuntimeException(e.getMessage());
         }
     }
 
