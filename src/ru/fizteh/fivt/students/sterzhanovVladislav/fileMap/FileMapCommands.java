@@ -288,7 +288,7 @@ public class FileMapCommands {
     
     public static class Describe extends FileMapCommand {
         public Describe() {
-            super(1);
+            super(2);
         }
 
         @Override
@@ -298,7 +298,7 @@ public class FileMapCommands {
 
         @Override
         public void innerExecute(String[] args) throws Exception, IOException {
-            parentShell.out.println(dbContext.describe());
+            parentShell.out.println(dbContext.describe(args[1]));
         }
     }
 }
