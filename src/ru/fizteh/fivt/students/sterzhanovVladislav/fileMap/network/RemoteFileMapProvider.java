@@ -49,7 +49,7 @@ public class RemoteFileMapProvider implements RemoteTableProvider, AtomicTablePr
         }
         String typeNames;
         try {
-            typeNames = NetworkUtils.queryResponse(tableSession, "describe");
+            typeNames = NetworkUtils.queryResponse(tableSession, "describe " + name);
         } catch (IOException e) {
             throw new RuntimeException("Error while trying to query server: " + e.getMessage());
         }

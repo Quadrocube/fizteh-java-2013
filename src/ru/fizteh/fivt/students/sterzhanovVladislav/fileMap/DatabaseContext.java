@@ -160,12 +160,16 @@ public class DatabaseContext implements AutoCloseable {
         }
     }
     
-    public String describe() {
+    public String describe(String name) {
         if (activeMap == null) {
             throw new IllegalStateException("no database");
         }
         StringBuilder signature = new StringBuilder();
-        for (Class<?> type : StoreableUtils.generateSignature(activeMap)) {
+        Table t = activeProvider.getTable(name);
+        if (t == null) {
+            throw new IllegalStateException(name + " not exists");
+        }
+        for (Class<?> type : StoreableUtils.generateSignature(t)) {
             signature.append(StoreableUtils.CLASSES.get(type));
             signature.append(" ");
         }
