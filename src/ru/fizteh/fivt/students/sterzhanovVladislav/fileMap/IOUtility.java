@@ -191,7 +191,7 @@ public class IOUtility {
                 if (typeName.isEmpty()) {
                     typeName = "[empty]";
                 }
-                throw new ColumnFormatException("wrong type (" + typeName + " unknown)");
+                throw new ColumnFormatException("wrong type (" + typeName + " unknown) " + typeNamesList);
             }
             signature.add(StoreableUtils.TYPENAMES.get(typeName));
         }
