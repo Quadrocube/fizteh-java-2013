@@ -152,8 +152,11 @@ public class RemoteFileMap implements Table, Closeable {
     }
     
     private void ensureValidValue(Storeable value) {
-        if (!FileMap.isValidValue(value, columnTypes)) {
-            throw new IllegalStateException("Invalid value");
+        if (value == null) {
+            throw new IllegalArgumentException("Invalid value");
+        }
+        if (!StoreableUtils.validate(value, columnTypes)) {
+            throw new ColumnFormatException();
         }
     }
 }
