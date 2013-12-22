@@ -51,7 +51,7 @@ public class FileMap implements Table {
         if (!isValidKey(key)) {
             throw new IllegalArgumentException("Illegal key");
         }
-        if (!isValidValue(value)) {
+        if (!isValidValue(value, columnTypes)) {
             throw new ColumnFormatException("Mismatched Storeable for table + " + getName());
         }
         Storeable result = getDirtyValueSynced(key);
@@ -291,11 +291,11 @@ public class FileMap implements Table {
         return diffSize;
     }
 
-    private static boolean isValidKey(String s) {
+    public static boolean isValidKey(String s) {
         return !(s == null || s.isEmpty() || s.contains("\n") || s.matches(".*\\s+.*"));
     }
 
-    private boolean isValidValue(Storeable s) {
+    public static boolean isValidValue(Storeable s, List<Class<?>> columnTypes) {
         return !(s == null || !StoreableUtils.validate(s, columnTypes));
     }
 }

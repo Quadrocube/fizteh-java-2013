@@ -12,6 +12,7 @@ import java.util.List;
 import ru.fizteh.fivt.storage.structured.ColumnFormatException;
 import ru.fizteh.fivt.storage.structured.Storeable;
 import ru.fizteh.fivt.storage.structured.Table;
+import ru.fizteh.fivt.students.sterzhanovVladislav.fileMap.FileMap;
 import ru.fizteh.fivt.students.sterzhanovVladislav.fileMap.storeable.StoreableUtils;
 
 public class RemoteFileMap implements Table, Closeable {
@@ -30,6 +31,7 @@ public class RemoteFileMap implements Table, Closeable {
     @Override
     public Storeable get(String key) {
         ensureIsStillAlive();
+        ensureValidKey(key);
         return queryStoreableResponse("get " + key);
     }
 
@@ -37,12 +39,15 @@ public class RemoteFileMap implements Table, Closeable {
     public Storeable put(String key, Storeable value)
             throws ColumnFormatException {
         ensureIsStillAlive();
+        ensureValidKey(key);
+        ensureValidValue(value);
         return queryStoreableResponse("put " + key + " " + StoreableUtils.serialize(value, columnTypes));
     }
 
     @Override
     public Storeable remove(String key) {
         ensureIsStillAlive();
+        ensureValidKey(key);
         return queryStoreableResponse("remove " + key);
     }
 
@@ -139,5 +144,16 @@ public class RemoteFileMap implements Table, Closeable {
             throw new IllegalStateException("Error: Table " + name + " was already closed");
         }
     }
-
+    
+    private void ensureValidKey(String key) {
+        if (!FileMap.isValidKey(key)) {
+            throw new IllegalArgumentException("Invalid key");
+        }
+    }
+    
+    private void ensureValidValue(Storeable value) {
+        if (!FileMap.isValidValue(value, columnTypes)) {
+            throw new IllegalStateException("Invalid value");
+        }
+    }
 }
