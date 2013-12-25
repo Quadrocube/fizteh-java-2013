@@ -9,7 +9,7 @@ import ru.fizteh.fivt.storage.structured.RemoteTableProviderFactory;
 public class RemoteFileMapProviderFactory implements RemoteTableProviderFactory, AutoCloseable {
 
     private boolean isClosed = false;
-    private HashSet<RemoteFileMapProvider> providers;
+    private HashSet<RemoteFileMapProvider> providers = new HashSet<RemoteFileMapProvider>();
     
     @Override
     public RemoteTableProvider connect(String hostname, int port) throws IOException {
