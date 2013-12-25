@@ -89,7 +89,7 @@ public class RemoteFileMapProvider implements RemoteTableProvider, AtomicTablePr
                 + " (" + signature.substring(0, signature.length() - 1) + ")");
         if (!response.equals("created")) {
             if (response.equals(name + " exists")) {
-                return getTable(name);
+                return null;
             } else {
                 throw new RuntimeException(response);
             }
