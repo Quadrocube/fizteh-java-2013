@@ -190,10 +190,13 @@ public class FileMapProvider implements AtomicTableProvider {
         for (FileMap table : tables.values()) {
             table.close();
         }
+        tables.clear();
     }
 
     public void resetTable(String tableName) {
-        tables.remove(tableName);
+        if (!isClosed) {
+            tables.remove(tableName);
+        }
     }
 
     private void ensureIsOpen() {

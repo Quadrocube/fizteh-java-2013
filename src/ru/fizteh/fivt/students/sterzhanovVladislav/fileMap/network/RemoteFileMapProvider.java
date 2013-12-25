@@ -20,6 +20,7 @@ public class RemoteFileMapProvider implements RemoteTableProvider, AtomicTablePr
     private final int port;
     private final String host;
     private final Socket providerSession;
+    private boolean isClosing = false;
     
     private Hashtable<String, RemoteFileMap> tableSessions = new Hashtable<String, RemoteFileMap>();
 
@@ -173,16 +174,20 @@ public class RemoteFileMapProvider implements RemoteTableProvider, AtomicTablePr
 
     @Override
     public void close() throws IOException {
+        isClosing = true;
         if (!providerSession.isClosed()) {
             for (RemoteFileMap table : tableSessions.values()) {
                 table.close();
             }
+            tableSessions.clear();
             providerSession.close();
         }
     }
     
     public void resetTable(String tableName) {
-        tableSessions.remove(tableName);
+        if (!isClosing) {
+            tableSessions.remove(tableName);
+        }
     }
 
     private void ensureIsOpen() {
