@@ -154,9 +154,10 @@ public class DatabaseContext implements AutoCloseable {
         this.activeProvider = provider;
     } 
     
-    public void close() throws IOException {
+    public void close() throws Exception {
         if (activeMap != null) {
             activeProvider.closeTableIfNotModified(activeMap.getName());
+            activeProvider.close();
         }
     }
     

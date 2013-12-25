@@ -31,7 +31,7 @@ public class Wrapper {
                 public void run() {
                     try {
                         dbContext.close();
-                    } catch (IOException e) {
+                    } catch (Exception e) {
                         // Ignore
                     }
                     try {

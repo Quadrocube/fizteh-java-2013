@@ -23,11 +23,13 @@ public class FileMapProvider implements AtomicTableProvider {
 
     private Path rootDir;
     private HashMap<String, FileMap> tables;
+    private volatile boolean isClosed = false;
     
     private Lock lock = new ReentrantLock();
     
     @Override
     public FileMap getTable(String name) {
+        ensureIsOpen();
         if (name == null || name.isEmpty()) {
             throw new IllegalArgumentException();
         }
@@ -54,6 +56,7 @@ public class FileMapProvider implements AtomicTableProvider {
 
     @Override
     public FileMap createTable(String name, List<Class<?>> columnTypes) throws IOException {
+        ensureIsOpen();
         if (name == null || name.isEmpty() || columnTypes == null || columnTypes.isEmpty()) {
             throw new IllegalArgumentException();
         }
@@ -78,6 +81,7 @@ public class FileMapProvider implements AtomicTableProvider {
 
     @Override
     public void removeTable(String name) {
+        ensureIsOpen();
         if (name == null || name.isEmpty()) {
             throw new IllegalArgumentException();
         }
@@ -141,12 +145,14 @@ public class FileMapProvider implements AtomicTableProvider {
     @Override
     public Storeable deserialize(Table table, String value)
             throws ParseException {
+        ensureIsOpen();
         return StoreableUtils.deserialize(value, StoreableUtils.generateSignature(table));
     }
 
     @Override
     public String serialize(Table table, Storeable value)
             throws ColumnFormatException {
+        ensureIsOpen();
         if (!StoreableUtils.validate(value, StoreableUtils.generateSignature(table))) {
             throw new ColumnFormatException("wrong type (can't serialize value according to signature)");
         }
@@ -155,17 +161,20 @@ public class FileMapProvider implements AtomicTableProvider {
 
     @Override
     public Storeable createFor(Table table) {
+        ensureIsOpen();
         return new StoreableRow(StoreableUtils.generateSignature(table));
     }
 
     @Override
     public Storeable createFor(Table table, List<?> values)
             throws ColumnFormatException, IndexOutOfBoundsException {
+        ensureIsOpen();
         return new StoreableRow(StoreableUtils.generateSignature(table), values);
     }
 
     @Override
     public void closeTableIfNotModified(String name) throws IllegalStateException, IOException {
+        ensureIsOpen();
         FileMap table = tables.get(name);
         if (table == null) {
             throw new IllegalStateException(name + " not exists");
@@ -173,6 +182,23 @@ public class FileMapProvider implements AtomicTableProvider {
         int currentDiffSize = table.getDiffSize();
         if (table != null && currentDiffSize > 0) {
             throw new IllegalStateException(currentDiffSize + " unsaved changes");
+        }
+    }
+    @Override
+    public void close() throws Exception {
+        isClosed = true;
+        for (FileMap table : tables.values()) {
+            table.close();
+        }
+    }
+
+    public void resetTable(String tableName) {
+        tables.remove(tableName);
+    }
+
+    private void ensureIsOpen() {
+        if (isClosed) {
+            throw new IllegalStateException("TableProvider was closed");
         }
     }
    
