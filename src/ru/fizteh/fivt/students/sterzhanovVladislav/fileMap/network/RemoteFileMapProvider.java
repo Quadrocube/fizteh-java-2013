@@ -15,7 +15,7 @@ import ru.fizteh.fivt.students.sterzhanovVladislav.fileMap.IOUtility;
 import ru.fizteh.fivt.students.sterzhanovVladislav.fileMap.storeable.StoreableRow;
 import ru.fizteh.fivt.students.sterzhanovVladislav.fileMap.storeable.StoreableUtils;
 
-public class RemoteFileMapProvider implements RemoteTableProvider, AtomicTableProvider {
+public class RemoteFileMapProvider implements RemoteTableProvider, AtomicTableProvider, AutoCloseable {
     
     private final int port;
     private final String host;
@@ -25,6 +25,7 @@ public class RemoteFileMapProvider implements RemoteTableProvider, AtomicTablePr
 
     @Override
     public Table getTable(String name) {
+        ensureIsOpen();
         if (name == null || name.isEmpty()) {
             throw new IllegalArgumentException();
         }
@@ -59,7 +60,7 @@ public class RemoteFileMapProvider implements RemoteTableProvider, AtomicTablePr
         List<Class<?>> signature = IOUtility.parseSignatureFromString(typeNames);
 
         try {
-            RemoteFileMap result = new RemoteFileMap(name, signature, tableSession);
+            RemoteFileMap result = new RemoteFileMap(name, signature, tableSession, this);
             tableSessions.put(name, result);
             return result;
         } catch (IOException e) {
@@ -70,6 +71,7 @@ public class RemoteFileMapProvider implements RemoteTableProvider, AtomicTablePr
     @Override
     public Table createTable(String name, List<Class<?>> columnTypes)
             throws IOException {
+        ensureIsOpen();
         if (name == null || name.isEmpty() || columnTypes == null || columnTypes.isEmpty()) {
             throw new IllegalArgumentException();
         }
@@ -102,7 +104,7 @@ public class RemoteFileMapProvider implements RemoteTableProvider, AtomicTablePr
             throw new RuntimeException(response);
         }
         try {
-            RemoteFileMap result = new RemoteFileMap(name, columnTypes, tableSession);
+            RemoteFileMap result = new RemoteFileMap(name, columnTypes, tableSession, this);
             tableSessions.put(name, result);
             return result;
         } catch (IOException e) {
@@ -112,6 +114,7 @@ public class RemoteFileMapProvider implements RemoteTableProvider, AtomicTablePr
 
     @Override
     public void removeTable(String name) throws IOException {
+        ensureIsOpen();
         if (name == null || name.isEmpty()) {
             throw new IllegalArgumentException();
         }
@@ -135,12 +138,14 @@ public class RemoteFileMapProvider implements RemoteTableProvider, AtomicTablePr
     @Override
     public Storeable deserialize(Table table, String value)
             throws ParseException {
+        ensureIsOpen();
         return StoreableUtils.deserialize(value, StoreableUtils.generateSignature(table));
     }
 
     @Override
     public String serialize(Table table, Storeable value)
             throws ColumnFormatException {
+        ensureIsOpen();
         if (!StoreableUtils.validate(value, StoreableUtils.generateSignature(table))) {
             throw new ColumnFormatException("wrong type (can't serialize value according to signature)");
         }
@@ -149,6 +154,7 @@ public class RemoteFileMapProvider implements RemoteTableProvider, AtomicTablePr
 
     @Override
     public Storeable createFor(Table table) {
+        ensureIsOpen();
         if (table == null) {
             throw new IllegalArgumentException("null table");
         }
@@ -158,6 +164,7 @@ public class RemoteFileMapProvider implements RemoteTableProvider, AtomicTablePr
     @Override
     public Storeable createFor(Table table, List<?> values)
             throws ColumnFormatException, IndexOutOfBoundsException {
+        ensureIsOpen();
         if (table == null) {
             throw new IllegalArgumentException("null table");
         }
@@ -166,12 +173,24 @@ public class RemoteFileMapProvider implements RemoteTableProvider, AtomicTablePr
 
     @Override
     public void close() throws IOException {
-        for (RemoteFileMap table : tableSessions.values()) {
-            table.close();
+        if (!providerSession.isClosed()) {
+            for (RemoteFileMap table : tableSessions.values()) {
+                table.close();
+            }
+            providerSession.close();
         }
-        providerSession.close();
     }
     
+    public void resetTable(String tableName) {
+        tableSessions.remove(tableName);
+    }
+
+    private void ensureIsOpen() {
+        if (providerSession.isClosed()) {
+            throw new IllegalStateException("TableProvider was closed");
+        }
+    }
+
     public RemoteFileMapProvider(String hostname, int port) throws IOException {
         this.host = hostname;
         this.port = port;
@@ -180,6 +199,7 @@ public class RemoteFileMapProvider implements RemoteTableProvider, AtomicTablePr
 
     @Override
     public void closeTableIfNotModified(String name) throws IllegalStateException, IOException {
+        ensureIsOpen();
         RemoteFileMap table = tableSessions.get(name);
         if (table == null) {
             throw new IllegalStateException(name + " not exists");

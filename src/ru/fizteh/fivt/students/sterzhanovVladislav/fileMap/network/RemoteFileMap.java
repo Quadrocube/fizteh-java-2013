@@ -1,7 +1,6 @@
 package ru.fizteh.fivt.students.sterzhanovVladislav.fileMap.network;
 
 import java.io.BufferedReader;
-import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -15,13 +14,14 @@ import ru.fizteh.fivt.storage.structured.Table;
 import ru.fizteh.fivt.students.sterzhanovVladislav.fileMap.FileMap;
 import ru.fizteh.fivt.students.sterzhanovVladislav.fileMap.storeable.StoreableUtils;
 
-public class RemoteFileMap implements Table, Closeable {
+public class RemoteFileMap implements Table, AutoCloseable {
 
     String name;
     Socket session;
     private List<Class<?>> columnTypes = null;
     private PrintWriter out = null;
     private BufferedReader in = null;
+    private final RemoteFileMapProvider parentProvider;
 
     @Override
     public String getName() {
@@ -86,11 +86,23 @@ public class RemoteFileMap implements Table, Closeable {
 
     @Override
     public void close() throws IOException {
-        session.close();
+        if (isAlive()) {
+            rollback();
+            if (parentProvider != null) {
+                try {
+                    parentProvider.resetTable(name);
+                } catch (IllegalStateException e) {
+                    // Provider is already closed -> just leave it alone.
+                }
+            }
+            session.close();
+        }
     }
 
-    public RemoteFileMap(String dbName, List<Class<?>> classes, Socket session) throws IOException {
+    public RemoteFileMap(String dbName, List<Class<?>> classes, Socket session, RemoteFileMapProvider provider) 
+            throws IOException {
         name = dbName;
+        this.parentProvider = provider;
         for (Class<?> type : classes) {
             if (type == null || !StoreableUtils.CLASSES.containsKey(type)) {
                 throw new IllegalArgumentException("Invalid column type");
