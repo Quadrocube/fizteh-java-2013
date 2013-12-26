@@ -25,6 +25,7 @@ public class RemoteFileMap implements Table, AutoCloseable {
 
     @Override
     public String getName() {
+        ensureIsStillAlive();
         return name;
     }
 

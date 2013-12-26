@@ -9,7 +9,12 @@ public class TelnetCommands {
             if (args.length < 1 || args.length > 2) {
                 throw new IllegalArgumentException(args[0] + " [port]");
             }
-            int port = args.length == 1 ? 10001 : Integer.parseInt(args[1]);
+            int port = -1;
+            try {
+                port = args.length == 1 ? 10001 : Integer.parseInt(args[1]);
+            } catch (NumberFormatException e) {
+                throw new RuntimeException("not started: wrong port number");
+            }
             try {
                 context.start(port);
             } catch (Exception e) {
