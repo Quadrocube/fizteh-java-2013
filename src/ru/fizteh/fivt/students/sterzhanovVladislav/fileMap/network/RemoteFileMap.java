@@ -119,8 +119,12 @@ public class RemoteFileMap implements Table, AutoCloseable {
         String response;
         try {
             response = NetworkUtils.queryResponse(session, in, out, request);
-            if (response.equals("not found") || response.equals("new")) {
+            if (response.equals("removed")) {
+                return parentProvider.createFor(this);
+            } else if (response.equals("not found") || response.equals("new")) {
                 return null;
+            } else {
+                response = NetworkUtils.queryResponse(session, in, out, null);
             }
         } catch (IOException e) {
             throw new RuntimeException("Error while trying to query server: " + e.getMessage());
