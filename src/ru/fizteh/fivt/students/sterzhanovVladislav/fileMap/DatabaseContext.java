@@ -159,6 +159,7 @@ public class DatabaseContext implements AutoCloseable {
             activeProvider.closeTableIfNotModified(activeMap.getName());
             activeProvider.close();
         }
+        activeMap = null;
     }
     
     public String describe(String name) {
@@ -177,8 +178,7 @@ public class DatabaseContext implements AutoCloseable {
     public void exit() {
         if (remoteProvider != null) {
             disconnectRemoteProvider();
-        } else {
-            System.exit(0);
         }
+        System.exit(0);
     }
 }
