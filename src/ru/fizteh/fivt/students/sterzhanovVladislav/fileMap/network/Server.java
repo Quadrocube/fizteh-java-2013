@@ -74,7 +74,7 @@ class Server implements Runnable {
         public void run() {
             String user = "";
             synchronized (activeUsers) {
-                user = "" + client.getInetAddress() + " " + client.getPort();
+                user = "" + client.getInetAddress() + ":" + client.getPort();
                 activeUsers.add(user);
             }
             InputStream inStream = null;
