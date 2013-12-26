@@ -182,6 +182,12 @@ public class FileMapProvider implements AtomicTableProvider {
         int currentDiffSize = table.getDiffSize();
         if (table != null && currentDiffSize > 0) {
             throw new IllegalStateException(currentDiffSize + " unsaved changes");
+        } else {
+            try {
+                table.close();
+            } catch (Exception e) {
+                throw new RuntimeException(e.getMessage());
+            }
         }
     }
     @Override

@@ -212,6 +212,8 @@ public class RemoteFileMapProvider implements RemoteTableProvider, AtomicTablePr
         String response = NetworkUtils.queryResponse(table.session, "use " + name);
         if (!response.equals("using " + name)) {
             throw new IllegalStateException(response);
+        } else {
+            table.close();
         }
     }
     
