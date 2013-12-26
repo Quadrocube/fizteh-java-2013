@@ -45,7 +45,7 @@ public class TelnetCommands {
         public void innerExecute(String[] args) throws Exception {
             List<String> userList = context.getActiveUsers();
             for (String user : userList) {
-                parentShell.out.println(user);
+                parentShell.out.println(user.substring(1, user.length()));
             }
         }
         
